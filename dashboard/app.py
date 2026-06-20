@@ -44,6 +44,13 @@ df = df[
 st.title("🌍 Global Energy Transition Dashboard")
 st.caption("Análisis de energía mundial (2000 - 2020)")
 
+# ==================================================
+# SUBTITULO
+# ==================================================
+
+st.subheader("Grupo 3 - Data Visualization")
+st.caption("Integrantes: Bruno Medina, Nicolas Miranda, Mildred Marchan, Alessandro Hesse, Alfredo Aragon")
+
 st.divider()
 
 # ==================================================
@@ -56,7 +63,7 @@ col1, col2 = st.columns(2)
 # ==================================================
 with col1:
 
-    st.subheader("🌱 Top 5 países con mayor crecimiento en energías renovables")
+    st.subheader("🌱 P1. Top 5 países con mayor crecimiento en energías renovables")
 
     df_q1 = df[
         ["country", "year", "renewable_share_of_total_energy"]
@@ -111,6 +118,14 @@ with col1:
 
         st.plotly_chart(fig1, width="stretch")
 
+        leader = top5.iloc[0]
+
+        st.caption(
+            f"Entre 2000 y 2020, **{leader['country']}** registró el mayor incremento "
+            f"en la participación de energías renovables, con un aumento de "
+            f"**{leader['Incremento']:.2f} puntos porcentuales**."
+        )
+
     else:
         st.warning("El rango seleccionado debe incluir los años 2000 y 2020.")
 
@@ -119,7 +134,7 @@ with col1:
 # ==================================================
 with col2:
 
-    st.subheader("🌍 Evolución de la intensidad de carbono por región")
+    st.subheader("🌍 P2. Evolución de la intensidad de carbono por región")
 
     if "region" in df.columns:
 
@@ -147,6 +162,27 @@ with col2:
         )
 
         st.plotly_chart(fig2, width="stretch")
+
+        region_change = (
+            region_df
+            .pivot(index="region", columns="year", values="carbon_intensity_elec")
+            .dropna(subset=[2000, 2020])
+        )
+
+        region_change["Cambio"] = region_change[2020] - region_change[2000]
+
+        region_best = region_change["Cambio"].idxmin()   # Mayor reducción
+        region_worst = region_change["Cambio"].idxmax()  # Mayor incremento
+
+        reduction = abs(region_change.loc[region_best, "Cambio"])
+        increase = region_change.loc[region_worst, "Cambio"]
+
+        st.caption(
+            f"Entre 2000 y 2020, **{region_best}** fue la región que más redujo "
+            f"la intensidad de carbono (**{reduction:.1f} unidades**), mientras que "
+            f"**{region_worst}** presentó el mayor incremento "
+            f"(**+{increase:.1f} unidades**)."
+        )
 
     else:
         st.error(
@@ -262,6 +298,8 @@ st.divider()
 # ==================================================
 # GRÁFICO 5 - Ranking de consumo per cápita
 # ==================================================
+st.subheader("📊 P5 · Ranking de los 12 mayores consumidores de energía per cápita")
+
 st.subheader("📊 Ranking de los 12 mayores consumidores de energía per cápita")
 
 top12 = (
@@ -287,7 +325,43 @@ st.plotly_chart(fig5, use_container_width=True)
 
 st.divider()
 
+# ==================================================
+# GRÁFICO 6 — Mix eléctrico por país
+# ==================================================
+st.subheader("⚡ P6 · Mix eléctrico por país (año de mayor producción renovable)")
 
+paises = sorted(df["country"].unique())
+pais_seleccionado = st.selectbox("Selecciona un país", paises, key="pais_mix")
+
+fuentes = ["coal_electricity", "gas_electricity", "nuclear_electricity", "solar_electricity", "wind_electricity", "hydro_electricity"]
+etiquetas = ["Carbón", "Gas", "Nuclear", "Solar", "Eólica", "Hidro"]
+
+datos_pais = df[df["country"] == pais_seleccionado].copy()
+if not datos_pais.empty:
+    anio_max_ren = datos_pais.loc[datos_pais["renewables_electricity"].idxmax(), "year"]
+    fila = datos_pais[datos_pais["year"] == anio_max_ren].iloc[0]
+    valores = [fila[f] for f in fuentes]
+    pct = [v / sum(valores) * 100 if sum(valores) > 0 else 0 for v in valores]
+
+    tabla_mix = pd.DataFrame({"fuente": etiquetas, "porcentaje": pct, "categoria": ""})
+    tabla_mix = tabla_mix.sort_values("porcentaje", ascending=False)
+
+    fig6 = px.bar(
+        tabla_mix, x="porcentaje", y="categoria", color="fuente", orientation="h",
+        barmode="stack", text_auto=".1f",
+        title=f"Mix eléctrico ({pais_seleccionado} - {int(anio_max_ren)})",
+        labels={"porcentaje": "Porcentaje (%)", "categoria": ""},
+        category_orders={"fuente": tabla_mix["fuente"].tolist()}
+    )
+
+    fig6.update_xaxes(range=[0, 100])
+    fig6.update_layout(height=400)
+
+    st.plotly_chart(fig6, use_container_width=True)
+else:
+    st.warning(f"No hay datos para {pais_seleccionado}.")
+
+st.divider()
 
 # ==================================================
 # GRÁFICO 7 — América Latina: intensidad de carbono
@@ -583,4 +657,3 @@ st.markdown(
     muy cortos o variaciones interanuales convendría usar *zoom*, anotar periodos
     específicos o una visualización adicional de variaciones porcentuales.
     """
-)
