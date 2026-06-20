@@ -237,7 +237,6 @@ else:
     st.plotly_chart(fig_scatter3, use_container_width=True)
 
 st.divider()
-
 # ==================================================
 # GRÁFICO 4 — Acceso a electricidad vs. Combustibles fósiles (Dinámico)
 # ==================================================
@@ -300,6 +299,8 @@ st.divider()
 # GRÁFICO 5 - Ranking de consumo per cápita
 # ==================================================
 st.subheader("📊 P5 · Ranking de los 12 mayores consumidores de energía per cápita")
+
+st.subheader("📊 Ranking de los 12 mayores consumidores de energía per cápita")
 
 top12 = (
     df[df["year"].between(2000, 2020)]
@@ -624,6 +625,8 @@ else:
             f"(brecha de {p9_pivot.loc[year_farthest, 'brecha_peru']:,.0f} kWh por persona)."
         )
 
+st.divider()
+
 # ==================================================
 # PREGUNTA 10 — Argumentación verbal sobre P9
 # ==================================================
@@ -654,4 +657,3 @@ st.markdown(
     muy cortos o variaciones interanuales convendría usar *zoom*, anotar periodos
     específicos o una visualización adicional de variaciones porcentuales.
     """
-)
